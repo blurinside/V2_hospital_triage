@@ -206,13 +206,24 @@ def override_prediction(visit_id: int, db: Session = Depends(get_db)):
     if not latest_prediction:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
-    # Toggle classification
-    if latest_prediction.classification == "Critical":
-        latest_prediction.classification = "Needs Review"
-    else:
-        latest_prediction.classification = "Critical"
+    # If currently escalated → revert
+    if latest_prediction.override_triggered:
 
-    latest_prediction.override_triggered = True
+        if latest_prediction.original_classification:
+            latest_prediction.classification = latest_prediction.original_classification
+
+        latest_prediction.override_triggered = False
+
+    else:
+        # Only escalate if not already critical
+        if latest_prediction.classification != "Critical":
+
+            # Save original ONLY if not already saved
+            if not latest_prediction.original_classification:
+                latest_prediction.original_classification = latest_prediction.classification
+
+            latest_prediction.classification = "Critical"
+            latest_prediction.override_triggered = True
 
     db.commit()
     db.refresh(latest_prediction)
@@ -221,7 +232,6 @@ def override_prediction(visit_id: int, db: Session = Depends(get_db)):
         "visit_id": visit_id,
         "new_classification": latest_prediction.classification
     }
-
 # ==============================
 # Prescriptions
 # ==============================

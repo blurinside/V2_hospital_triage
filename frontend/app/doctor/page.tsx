@@ -98,7 +98,9 @@ setVisits(sortedVisits)
   <Badge
     className={`mt-2 ${
       v.classification === "Critical"
-        ? "bg-red-500 text-white"
+        ? "bg-red-600 text-white"
+        : v.classification === "Urgent"
+        ? "bg-orange-500 text-white"
         : "bg-yellow-500 text-white"
     }`}
   >
@@ -171,33 +173,49 @@ setVisits(sortedVisits)
 
 <Button
   onClick={async () => {
-    await fetch(`http://localhost:8000/override/${selectedVisit.id}`, {
-      method: "PUT",
-    })
+    try {
+      const BASE_URL = "http://localhost:8000"
 
-    const res = await fetch("http://localhost:8000/visits")
-    const data = await res.json()
-
-    const sortedVisits = data
-      .filter((v: any) => v.status === "OPEN")
-      .sort(
-        (a: any, b: any) =>
-          (b.risk_probability || 0) - (a.risk_probability || 0)
+      const overrideRes = await fetch(
+        `${BASE_URL}/override/${selectedVisit.id}`,
+        { method: "PUT" }
       )
 
-    setVisits(sortedVisits)
+      if (!overrideRes.ok) {
+        throw new Error("Override failed")
+      }
 
-    const updatedVisit = sortedVisits.find(
-      (v: any) => v.id === selectedVisit.id
-    )
+      const visitsRes = await fetch(`${BASE_URL}/visits`)
 
-    setSelectedVisit(updatedVisit)
+      if (!visitsRes.ok) {
+        throw new Error("Failed to refresh visits")
+      }
+
+      const data = await visitsRes.json()
+
+      const sortedVisits = data
+        .filter((v: any) => v.status === "OPEN")
+        .sort(
+          (a: any, b: any) =>
+            (b.risk_probability || 0) - (a.risk_probability || 0)
+        )
+
+      setVisits(sortedVisits)
+
+      const updated = sortedVisits.find(
+        (v: any) => v.id === selectedVisit.id
+      )
+
+      setSelectedVisit(updated)
+
+    } catch (error) {
+      console.error("Override error:", error)
+    }
   }}
   className="w-full bg-red-600 text-white"
 >
-  Toggle Critical Override
+  Escalate / Revert
 </Button>
-
                 </CardContent>
               </Card>
             ) : (

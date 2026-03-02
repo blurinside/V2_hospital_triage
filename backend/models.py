@@ -59,6 +59,7 @@ class Prediction(Base):
     visit_id = Column(Integer, ForeignKey("visits.id", ondelete="CASCADE"), nullable=False)
 
     classification = Column(String(20), nullable=False)
+    original_classification = Column(String(20))
     risk_probability = Column(Float, nullable=False)
     override_triggered = Column(Boolean, nullable=False)
 

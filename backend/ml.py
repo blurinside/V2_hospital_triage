@@ -69,6 +69,11 @@ def predict(data: dict):
     X = hstack([text_input, numeric_scaled]).toarray()
 
     prob = model.predict_proba(X)[0][1]
-    label = "Critical" if prob >= THRESHOLD else "Needs Review"
+    if prob > 0.6:
+        label = "Critical"
+    elif 0.4 <= prob <= 0.6:
+        label = "Urgent"
+    else:
+        label = "Needs Review"
 
     return label, float(prob), False
