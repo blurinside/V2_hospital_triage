@@ -10,6 +10,7 @@ import crud
 
 app = FastAPI()
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -93,11 +94,12 @@ def get_visit(visit_id: int, db: Session = Depends(get_db)):
 
 @app.get("/visits")
 def get_all_visits(db: Session = Depends(get_db)):
-    visits = db.query(Visit).all()
 
+    visits = db.query(Visit).all()
     result = []
 
     for v in visits:
+
         latest_prediction = (
             db.query(Prediction)
             .filter(Prediction.visit_id == v.id)
@@ -107,6 +109,14 @@ def get_all_visits(db: Session = Depends(get_db)):
 
         result.append({
             "id": v.id,
+            "email": v.patient.email,
+            "gender": v.patient.gender,
+
+            # 🔥 ADD THESE TWO
+            "patient_id": v.patient.id,
+            "age": v.patient.age,
+
+            # existing
             "patient_name": v.patient.full_name,
             "temperature": v.temperature,
             "pulse": v.pulse,
@@ -114,12 +124,12 @@ def get_all_visits(db: Session = Depends(get_db)):
             "diastolic_bp": v.diastolic_bp,
             "rfv_text": v.rfv_text,
             "status": v.status,
+
             "classification": latest_prediction.classification if latest_prediction else None,
             "risk_probability": latest_prediction.risk_probability if latest_prediction else None,
         })
 
     return result
-
 # ==============================
 # RUN TRIAGE
 # ==============================
@@ -249,3 +259,27 @@ def fetch_prescriptions(visit_id: int, db: Session = Depends(get_db)):
 @app.put("/prescriptions/discontinue/{prescription_id}", response_model=schemas.PrescriptionResponse)
 def discontinue(prescription_id: int, db: Session = Depends(get_db)):
     return crud.discontinue_prescription(db, prescription_id)
+
+
+# ==============================
+# COMPLETE VISIT
+# ==============================
+
+@app.put("/visits/{visit_id}/complete")
+def complete_visit(visit_id: int, db: Session = Depends(get_db)):
+
+    visit = db.query(Visit).filter(Visit.id == visit_id).first()
+
+    if not visit:
+        raise HTTPException(status_code=404, detail="Visit not found")
+
+    visit.status = "COMPLETED"
+
+    db.commit()
+    db.refresh(visit)
+
+    return {
+        "message": "Visit marked as completed",
+        "visit_id": visit.id,
+        "status": visit.status
+    }

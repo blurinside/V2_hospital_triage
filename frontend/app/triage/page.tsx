@@ -51,7 +51,7 @@ export default function CaseOverviewPage() {
           <div className="flex h-16 items-center px-6">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">
-                📊 Case Overview
+                Case Overview
               </h1>
               <p className="text-sm text-muted-foreground">
                 Hospital Operations Dashboard
