@@ -5,6 +5,8 @@ from database import SessionLocal
 from models import Patient, Visit, Prediction
 from schemas import PatientCreate, VisitCreate, PredictionResponse
 from ml import predict
+import schemas
+import crud
 
 app = FastAPI()
 
@@ -93,18 +95,30 @@ def get_visit(visit_id: int, db: Session = Depends(get_db)):
 def get_all_visits(db: Session = Depends(get_db)):
     visits = db.query(Visit).all()
 
-    return [
-        {
+    result = []
+
+    for v in visits:
+        latest_prediction = (
+            db.query(Prediction)
+            .filter(Prediction.visit_id == v.id)
+            .order_by(Prediction.id.desc())
+            .first()
+        )
+
+        result.append({
             "id": v.id,
-            "patient_id": v.patient_id,
             "patient_name": v.patient.full_name,
             "temperature": v.temperature,
             "pulse": v.pulse,
+            "systolic_bp": v.systolic_bp,
+            "diastolic_bp": v.diastolic_bp,
+            "rfv_text": v.rfv_text,
             "status": v.status,
-            "created_at": v.created_at,
-        }
-        for v in visits
-    ]
+            "classification": latest_prediction.classification if latest_prediction else None,
+            "risk_probability": latest_prediction.risk_probability if latest_prediction else None,
+        })
+
+    return result
 
 # ==============================
 # RUN TRIAGE
@@ -174,3 +188,54 @@ def get_predictions(visit_id: int, db: Session = Depends(get_db)):
     preds = db.query(Prediction).filter(Prediction.visit_id == visit_id).all()
 
     return preds
+
+# ==============================
+# DOCTOR OVERRIDE
+# ==============================
+
+@app.put("/override/{visit_id}")
+def override_prediction(visit_id: int, db: Session = Depends(get_db)):
+
+    latest_prediction = (
+        db.query(Prediction)
+        .filter(Prediction.visit_id == visit_id)
+        .order_by(Prediction.id.desc())
+        .first()
+    )
+
+    if not latest_prediction:
+        raise HTTPException(status_code=404, detail="Prediction not found")
+
+    # Toggle classification
+    if latest_prediction.classification == "Critical":
+        latest_prediction.classification = "Needs Review"
+    else:
+        latest_prediction.classification = "Critical"
+
+    latest_prediction.override_triggered = True
+
+    db.commit()
+    db.refresh(latest_prediction)
+
+    return {
+        "visit_id": visit_id,
+        "new_classification": latest_prediction.classification
+    }
+
+# ==============================
+# Prescriptions
+# ==============================
+
+@app.post("/prescriptions", response_model=schemas.PrescriptionResponse)
+def add_prescription(prescription: schemas.PrescriptionCreate, db: Session = Depends(get_db)):
+    return crud.create_prescription(db, prescription.dict())
+
+
+@app.get("/prescriptions/{visit_id}", response_model=list[schemas.PrescriptionResponse])
+def fetch_prescriptions(visit_id: int, db: Session = Depends(get_db)):
+    return crud.get_prescriptions_by_visit(db, visit_id)
+
+
+@app.put("/prescriptions/discontinue/{prescription_id}", response_model=schemas.PrescriptionResponse)
+def discontinue(prescription_id: int, db: Session = Depends(get_db)):
+    return crud.discontinue_prescription(db, prescription_id)

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/hospital/sidebar"
+
 import { StatusBadge } from "@/components/hospital/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users } from "lucide-react"
@@ -21,7 +21,7 @@ export function PatientsContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      
       <main className="ml-64 min-h-screen">
         <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-sm">
           <div className="flex h-16 items-center justify-between px-6">

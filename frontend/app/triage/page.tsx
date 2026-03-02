@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sidebar } from "@/components/hospital/sidebar"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, CheckCircle, Clock, Users } from "lucide-react"
 
@@ -32,8 +32,8 @@ export default function CaseOverviewPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-64 min-h-screen">
+      
+      <main className="min-h-screen pb-24">
         <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-sm">
           <div className="flex h-16 items-center justify-between px-6">
             <div>

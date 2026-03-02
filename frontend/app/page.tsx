@@ -106,7 +106,7 @@
 //   return (
 //     <div className="min-h-screen bg-background">
 //       <Sidebar />
-//       <main className="ml-64 min-h-screen">
+//       <main className="min-h-screen pb-24">
 //         <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-sm">
 //           <div className="flex h-16 items-center justify-between px-6">
 //             <div>
@@ -314,7 +314,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Sidebar } from "@/components/hospital/sidebar"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -342,7 +342,7 @@ export default function StaffDashboard() {
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -417,7 +417,7 @@ export default function StaffDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+  
       <main className="ml-64 min-h-screen p-6">
         <h1 className="text-2xl font-semibold mb-6">Patient Intake Portal</h1>
 

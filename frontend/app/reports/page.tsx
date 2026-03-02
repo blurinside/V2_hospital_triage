@@ -1,6 +1,6 @@
 "use client"
 
-import { Sidebar } from "@/components/hospital/sidebar"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, Download, Calendar, BarChart3 } from "lucide-react"
@@ -15,8 +15,8 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
-      <main className="ml-64 min-h-screen">
+      
+      <main className="min-h-screen pb-24">
         <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-sm">
           <div className="flex h-16 items-center justify-between px-6">
             <div>

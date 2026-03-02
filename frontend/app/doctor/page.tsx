@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Sidebar } from "@/components/hospital/sidebar"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,9 +24,13 @@ export default function DoctorDashboard() {
         const data = await res.json()
 
         // Show only OPEN visits
-        const openVisits = data.filter((v: any) => v.status === "OPEN")
+        const sortedVisits = data.filter((v: any) => v.status === "OPEN").sort((a: any, b: any) => 
+    (b.risk_probability || 0) - (a.risk_probability || 0)
+    )
 
-        setVisits(openVisits)
+setVisits(sortedVisits)
+
+
       } catch (error) {
         console.error("Error fetching visits:", error)
       }
@@ -37,9 +41,9 @@ export default function DoctorDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
+      
 
-      <main className="ml-64 min-h-screen">
+      <main className="min-h-screen pb-24">
 
         {/* HEADER */}
         <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur-sm">
@@ -69,15 +73,38 @@ export default function DoctorDashboard() {
                   onClick={() => setSelectedVisit(v)}
                   className="w-full text-left p-3 rounded-lg border hover:bg-muted mb-2"
                 >
-                  <div className="font-medium text-sm">
-                    Visit {v.id}
-                  </div>
+                  <div className="flex justify-between items-center">
+  <div>
+    <div className="font-medium text-sm">
+      Visit {v.id} – {v.patient_name}
+    </div>
 
-                  <div className="text-xs text-muted-foreground">
-                    {v.rfv_text}
-                  </div>
+    <div className="text-xs text-muted-foreground">
+      {v.rfv_text}
+    </div>
+  </div>
 
-                  <Badge className="mt-1">{v.status}</Badge>
+  <div className="text-right">
+    <div className="text-xs text-muted-foreground">
+      Risk
+    </div>
+    <div className="font-semibold">
+      {(v.risk_probability * 100).toFixed(1)}%
+    </div>
+  </div>
+</div>
+
+{v.classification && (
+  <Badge
+    className={`mt-2 ${
+      v.classification === "Critical"
+        ? "bg-red-500 text-white"
+        : "bg-yellow-500 text-white"
+    }`}
+  >
+    {v.classification}
+  </Badge>
+)}
                 </button>
               ))}
 
@@ -94,9 +121,9 @@ export default function DoctorDashboard() {
 
                   {/* Visit Header */}
                   <div className="flex justify-between items-center">
-                    <h2 className="text-lg font-semibold">
-                      Visit {selectedVisit.id}
-                    </h2>
+                    <h2 className="text-xl font-semibold">
+  Doctor Dashboard
+</h2>
                     <Badge>{selectedVisit.status}</Badge>
                   </div>
 
@@ -134,11 +161,42 @@ export default function DoctorDashboard() {
                   </div>
 
                   <Button
-                    onClick={() => setShowPrescriptionModal(true)}
-                    className="w-full"
-                  >
-                    Add / View Prescriptions
-                  </Button>
+  onClick={() => setShowPrescriptionModal(true)}
+  className="w-full"
+>
+  Add / View Prescriptions
+</Button>
+
+{/* 🔥 ADD THIS BUTTON BELOW */}
+
+<Button
+  onClick={async () => {
+    await fetch(`http://localhost:8000/override/${selectedVisit.id}`, {
+      method: "PUT",
+    })
+
+    const res = await fetch("http://localhost:8000/visits")
+    const data = await res.json()
+
+    const sortedVisits = data
+      .filter((v: any) => v.status === "OPEN")
+      .sort(
+        (a: any, b: any) =>
+          (b.risk_probability || 0) - (a.risk_probability || 0)
+      )
+
+    setVisits(sortedVisits)
+
+    const updatedVisit = sortedVisits.find(
+      (v: any) => v.id === selectedVisit.id
+    )
+
+    setSelectedVisit(updatedVisit)
+  }}
+  className="w-full bg-red-600 text-white"
+>
+  Toggle Critical Override
+</Button>
 
                 </CardContent>
               </Card>

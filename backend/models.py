@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, Float, String, Boolean, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, Boolean, Text, DateTime, ForeignKey ,Date
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
+
 
 
 class Patient(Base):
@@ -65,3 +66,28 @@ class Prediction(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     visit = relationship("Visit", back_populates="predictions")
+
+
+class Prescription(Base):
+    __tablename__ = "prescriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    visit_id = Column(Integer, ForeignKey("visits.id", ondelete="CASCADE"), nullable=False)
+
+    medicine_name = Column(String(150), nullable=False)
+
+    dosage_per_day = Column(Integer, nullable=False)
+    tablets_per_dose = Column(Integer, nullable=False)
+
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+
+    total_tablets = Column(Integer, nullable=False)
+
+    remarks = Column(Text)
+
+    status = Column(String(20), default="ACTIVE")
+
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now())
